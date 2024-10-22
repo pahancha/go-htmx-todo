@@ -4,3 +4,9 @@
       hx-swap="outerHTML">
     {{if .Done}}✅{{else}}☐{{end}} {{.Title}}
 </span>
+<button hx-delete="/todos?id={{.ID}}"
+        hx-target="#todo-{{.ID}}"
+        hx-swap="outerHTML"
+        style="float: right; background-color: #f44336;">
+    Delete
+</button>

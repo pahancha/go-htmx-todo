@@ -10,6 +10,7 @@ import (
 )
 
 var todos []models.Todo
+var lastID int
 
 func init() {
     todos = []models.Todo{
@@ -18,14 +19,40 @@ func init() {
         {ID: 3, Title: "Build a todo app", Done: false},
         {ID: 4, Title: "Deploy the app", Done: false},
     }
+    lastID = 4
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
-    renderTemplate(w, "index.html", todos)
+    renderTemplate(w, "index.html", nil)
 }
 
 func TodosHandler(w http.ResponseWriter, r *http.Request) {
-    renderTemplate(w, "todos.html", todos)
+    if r.Method == http.MethodPost {
+        addTodoHandler(w, r)
+        return
+    }
+
+    filter := r.URL.Query().Get("filter")
+    var filteredTodos []models.Todo
+
+    switch filter {
+    case "active":
+        for _, todo := range todos {
+            if !todo.Done {
+                filteredTodos = append(filteredTodos, todo)
+            }
+        }
+    case "completed":
+        for _, todo := range todos {
+            if todo.Done {
+                filteredTodos = append(filteredTodos, todo)
+            }
+        }
+    default:
+        filteredTodos = todos
+    }
+
+    renderTemplate(w, "todos.html", filteredTodos)
 }
 
 func ToggleTodoHandler(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +73,65 @@ func ToggleTodoHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     renderTemplate(w, "todo_item.html", toggledTodo)
+    w.Header().Set("HX-Trigger", "todoUpdated")
+}
+
+func addTodoHandler(w http.ResponseWriter, r *http.Request) {
+    title := r.FormValue("title")
+    if title == "" {
+        http.Error(w, "Title is required", http.StatusBadRequest)
+        return
+    }
+
+    lastID++
+    newTodo := models.Todo{
+        ID:    lastID,
+        Title: title,
+        Done:  false,
+    }
+    todos = append(todos, newTodo)
+
+    renderTemplate(w, "todo_item.html", newTodo)
+    w.Header().Set("HX-Trigger", "todoUpdated")
+}
+
+func DeleteTodoHandler(w http.ResponseWriter, r *http.Request) {
+    idStr := r.URL.Query().Get("id")
+    id, err := strconv.Atoi(idStr)
+    if err != nil {
+        http.Error(w, "Invalid ID", http.StatusBadRequest)
+        return
+    }
+
+    for i, todo := range todos {
+        if todo.ID == id {
+            todos = append(todos[:i], todos[i+1:]...)
+            break
+        }
+    }
+
+    w.WriteHeader(http.StatusOK)
+    w.Header().Set("HX-Trigger", "todoUpdated")
+}
+
+func CounterHandler(w http.ResponseWriter, r *http.Request) {
+    total := len(todos)
+    completed := 0
+    for _, todo := range todos {
+        if todo.Done {
+            completed++
+        }
+    }
+
+    data := struct {
+        Total     int
+        Completed int
+    }{
+        Total:     total,
+        Completed: completed,
+    }
+
+    renderTemplate(w, "counter.html", data)
 }
 
 func renderTemplate(w http.ResponseWriter, tmplName string, data interface{}) {

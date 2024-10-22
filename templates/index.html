@@ -6,13 +6,74 @@
     <title>Todo App</title>
     <script src="https://unpkg.com/htmx.org@2.0.3" integrity="sha384-0895/pl2MU10Hqc6jd4RvrthNlDiE9U1tWmX7WRESftEDRosgxNsQG/Ze9YMRzHq" crossorigin="anonymous"></script>
     <style>
-        .done span { text-decoration: line-through; }
-        ul { list-style-type: none; padding: 0; }
-        li { cursor: pointer; margin-bottom: 5px; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .done span {
+            text-decoration: line-through;
+            color: #888;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            cursor: pointer;
+            margin-bottom: 10px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        form {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 5px;
+            font-size: 16px;
+        }
+        button {
+            padding: 5px 10px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .filters {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .filters button {
+            background-color: #008CBA;
+        }
+        .counter {
+            text-align: center;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <h1>Todo List</h1>
+    <form hx-post="/todos" hx-target="#todo-list" hx-swap="beforeend">
+        <input type="text" name="title" placeholder="Add a new todo" required>
+        <button type="submit">Add</button>
+    </form>
+    <div class="filters">
+        <button hx-get="/todos?filter=all" hx-target="#todo-list">All</button>
+        <button hx-get="/todos?filter=active" hx-target="#todo-list">Active</button>
+        <button hx-get="/todos?filter=completed" hx-target="#todo-list">Completed</button>
+    </div>
+    <div class="counter" hx-get="/counter" hx-trigger="load, todoUpdated from:body">
+    </div>
     <div id="todo-list" hx-get="/todos" hx-trigger="load">
     </div>
 </body>
