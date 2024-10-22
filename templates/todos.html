@@ -1,0 +1,7 @@
+<ul>
+    {{range .}}
+    <li id="todo-{{.ID}}" class="{{if .Done}}done{{end}}">
+        {{template "todo_item.html" .}}
+    </li>
+    {{end}}
+</ul>

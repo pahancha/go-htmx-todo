@@ -1,0 +1,6 @@
+<span hx-get="/toggle?id={{.ID}}" 
+      hx-trigger="click"
+      hx-target="#todo-{{.ID}}"
+      hx-swap="outerHTML">
+    {{if .Done}}✅{{else}}☐{{end}} {{.Title}}
+</span>
